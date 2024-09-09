@@ -1,6 +1,8 @@
 # EO-Lab-Aotearoa
 # Earth Observation Lab Aotearoa
 
+
+
 **Aotearoa’s | New Zealand's nexus for collaborative earth observation and data-driven decisions.**
 
 ---
