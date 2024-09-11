@@ -1,13 +1,14 @@
-# EO-Lab-Aotearoa
-# Earth Observation Lab Aotearoa
 
 
+<h1 align="center">Earth Observation Lab Aotearoa 🌏 </h1>
 
-**Aotearoa’s | New Zealand's nexus for collaborative earth observation and data-driven decisions.**
+<p align="center">
+  <strong>Aotearoa’s | New Zealand's nexus for collaborative earth observation and data-driven decisions.</strong>
+</p>
 
 ---
 
-## About Us
+## <p align="center">About Us </p>
 
 **Earth Observation Laboratory Aotearoa** seeks to establish a Laboratory for Earth Observation (EO), supported by **Te Pūnaha Ātea | Space Institute** and **Ngā Ara Whetū | Centre for Climate, Biodiversity & Society**, in collaboration with the **Centre for E-Research**. Our mission is to be Aotearoa’s nexus for collaborative earth observation and data-driven decisions.
 
@@ -15,7 +16,7 @@ This effort aligns with the objectives of the New Zealand government’s **Natio
 
 ---
 
-## Core Activities
+## <p align="center"> Core Activities </p>
 
 ### 1. **Community**  
 - Professional, contributing partners (**Hoamahi**).
@@ -37,7 +38,7 @@ This effort aligns with the objectives of the New Zealand government’s **Natio
 
 ---
 
-## Strategic Plan
+## <p align="center"> Strategic Plan </p>
 
 ### 1-2 Years (Setup Phase)
 Funded by the **University of Auckland Office of Research Strategy and Integrity (ORSI)** with support from **Ngā Ara Whetū**, this phase focuses on:
@@ -55,7 +56,7 @@ Our strategy follows the **‘open core’ business model**, where free services
 
 ---
 
-## Join Us
+## <p align="center"> Join Us </p>
 
 We are a community-driven initiative, and we invite you to join our journey. Whether you are a researcher, industry professional, or passionate about EO, there’s a place for you in the Earth Observation Lab Aotearoa.
 
@@ -63,14 +64,17 @@ Let’s shape the future of Earth Observation in Aotearoa together!
 
 ---
 
-**Contact us**: [Your Contact Info or Website Here]
+### <p align="center"> **Contact us** 
+<p align="center"> W: eolabaotearoa.co.nz | E: earth_observation_lab@auckland.ac.nz </p>
 
 
-<h3 align="left">Connect with EO Lab:</h3>
+<h3 align="left">Follow us!:</h3>
 <p align="left">
 <a href="https://twitter.com/eolab_aotearoa" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/twitter.svg" alt="eolab_aotearoa" height="30" width="40" /></a>
-<a href="https://linkedin.com/in/https://www.linkedin.com/in/earth-observation-lab-aotearoa-136128327/" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg" alt="https://www.linkedin.com/in/earth-observation-lab-aotearoa-136128327/" height="30" width="40" /></a>
+<a href="https://linkedin.com/in/https://www.linkedin.com/company/104432362/admin/dashboard/" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg" alt="https://www.linkedin.com/company/104432362/admin/dashboard/" height="30" width="40" /></a>
+<a href="https://instagram.com/eolab.aotearoa" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg" alt="eolab.aotearoa" height="30" width="40" /></a>
 </p>
 
-<h3 align="left">Languages and Tools:</h3>
-<p align="left"> <a href="https://www.java.com" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="java" width="40" height="40"/> </a> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="javascript" width="40" height="40"/> </a> <a href="https://www.python.org" target="_blank" rel="noreferrer"> <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/> </a> </p>
+
+
+
