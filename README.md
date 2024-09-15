@@ -40,7 +40,7 @@ This effort aligns with the objectives of the New Zealand government’s **Natio
 
 
 
-Our strategy follows the **‘open core’ business model**, where free services grow capacity, while commercial users contribute to the ecosystem's sustainability.
+We will seek to follow the **‘open core’ model**, where free services grow capacity, while commercial users contribute to the ecosystem's sustainability.
 
 ---
 
