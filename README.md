@@ -38,19 +38,7 @@ This effort aligns with the objectives of the New Zealand government’s **Natio
 
 ---
 
-## <p align="center"> Strategic Plan </p>
 
-### 1-2 Years (Setup Phase)
-Funded by the **University of Auckland Office of Research Strategy and Integrity (ORSI)** with support from **Ngā Ara Whetū**, this phase focuses on:
-- Building the community.
-- Identifying needs and current capabilities.
-- Appointing a **Māori co-director**.
-- Initiating small-scale partnership projects, educational materials, and outputs to build trust and demonstrate success.
-
-Projects will prioritize the **commercial sector** and **Iwi** as key partners.
-
-### 2-5 Years (Expansion Phase)
-To accelerate EO data use in New Zealand, we will seek long-term support from **government** and **industry**. A small team of full-time staff will have an outsized effect by building capacity across New Zealand’s economy and social structure.
 
 Our strategy follows the **‘open core’ business model**, where free services grow capacity, while commercial users contribute to the ecosystem's sustainability.
 
