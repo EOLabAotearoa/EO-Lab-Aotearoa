@@ -10,7 +10,7 @@
 
 ## <p align="center">About Us </p>
 
-**Earth Observation Laboratory Aotearoa** seeks to establish a Laboratory for Earth Observation (EO), supported by **Te Pūnaha Ātea | Space Institute** and **Ngā Ara Whetū | Centre for Climate, Biodiversity & Society**, in collaboration with the **Centre for E-Research**. Our mission is to be Aotearoa’s nexus for collaborative earth observation and data-driven decisions.
+**Earth Observation Laboratory Aotearoa** seeks to establish a Laboratory for Earth Observation (EO), supported by **Te Pūnaha Ātea | Space Institute** and **Ngā Ara Whetū | Centre for Climate, Biodiversity & Society**. Our mission is to be Aotearoa’s nexus for collaborative earth observation and data-driven decisions.
 
 This effort aligns with the objectives of the New Zealand government’s **National Space Policy**. We are committed to inclusivity and welcome all who want to join this community—breaking down barriers within and beyond the field.
 
