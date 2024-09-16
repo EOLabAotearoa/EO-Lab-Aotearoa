@@ -56,7 +56,7 @@ Let’s shape the future of Earth Observation in Aotearoa together!
 <p align="center"> W: eolabaotearoa.co.nz | E: earth_observation_lab@auckland.ac.nz </p>
 
 
-<h3 align="left">Follow us!:</h3>
+<h3 align="left">Follow us:</h3>
 <p align="left">
 <a href="https://twitter.com/eolab_aotearoa" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/twitter.svg" alt="eolab_aotearoa" height="30" width="40" /></a>
 <a href="https://linkedin.com/in/https://www.linkedin.com/company/104432362/admin/dashboard/" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg" alt="https://www.linkedin.com/company/104432362/admin/dashboard/" height="30" width="40" /></a>
