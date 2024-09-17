@@ -59,7 +59,12 @@ Let’s shape the future of Earth Observation in Aotearoa together!
 <h3 align="left">Follow us:</h3>
 <p align="left">
 <a href="https://twitter.com/eolab_aotearoa" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/twitter.svg" alt="eolab_aotearoa" height="30" width="40" /></a>
-<a href="https://linkedin.com/in/https://www.linkedin.com/company/104432362/admin/dashboard/" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg" alt="https://www.linkedin.com/company/104432362/admin/dashboard/" height="30" width="40" /></a>
+<a href="https://linkedin.com/in/earth-observation-lab-136128327" target="_blank">
+    <img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/linked-in-alt.svg" alt="LinkedIn Profile" height="30" width="40" />
+</a>
+  <a href="https://www.facebook.com/profile.php?id=61563338445159" target="_blank">
+    <img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/facebook.svg" alt="Facebook Profile" height="30" width="40" />
+</a>
 <a href="https://instagram.com/eolab.aotearoa" target="blank"><img align="center" src="https://raw.githubusercontent.com/rahuldkjain/github-profile-readme-generator/master/src/images/icons/Social/instagram.svg" alt="eolab.aotearoa" height="30" width="40" /></a>
 </p>
 
