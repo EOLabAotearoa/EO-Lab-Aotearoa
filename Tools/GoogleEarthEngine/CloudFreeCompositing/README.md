@@ -1,6 +1,6 @@
 # Google Earth Engine Cloud-Masked Composites
 
-Authors: [Elizabeth Williamns](https://github.com/elizabeth-fw), [Belle Yin](https://github.com/BelleYin), [Ben Anderson](https://github.com/bsanderson410)
+Authors: [Elizabeth Williams](https://github.com/elizabeth-fw), [Belle Yin](https://github.com/BelleYin), [Ben Anderson](https://github.com/bsanderson410)
 
 ## **Introduction** 
 
