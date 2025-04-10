@@ -10,10 +10,9 @@ Our mission is to be Aotearoa’s nexus for collaborative earth observation and 
 We are committed to inclusivity and welcome all who want to join this community—breaking down barriers within and beyond the field.
 
 ---
+
 ## <p align="center">Contents </p>
 - Generate cloud-free composites over New Zealand for Sentinel 2 and Landsat 1 to 9 in Google Earth Engine. [Link](https://github.com/EOLabAotearoa/EO-Lab-Aotearoa/tree/Home/Tools/GoogleEarthEngine/CloudFreeCompositing)
-
-
 
 ---
 
@@ -28,8 +27,6 @@ We are committed to inclusivity and welcome all who want to join this community�
 - **Software**: We encourage the development of **open-source tools** focused on New Zealand that address geospatial data and leverage **machine learning (AI)** applied to EO data.
 
 ---
-
-
 
 We will seek to follow the **‘open core’ model**, where free services grow capacity, while commercial users contribute to the ecosystem's sustainability.
 
