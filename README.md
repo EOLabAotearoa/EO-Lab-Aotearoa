@@ -24,16 +24,6 @@ We are committed to inclusivity and welcome all who want to join this community�
 
 ## <p align="center"> Core Activities </p>
 
-### 1. **Community**  
-- Professional, contributing partners (**Hoamahi**).
-- Stewards, problem holders (**Kaitiaki**).
-
-### 2. **Te Ao Māori**  
-- Engagement with and acknowledgement of **indigenous knowledge**.
-- Addressing data sovereignty in the EO domain.
-
-### 3. **Resources**
-
 - **Education**: Capacity building for EO-driven problem solving across all levels and sectors of New Zealand. From free curated content and University-led micro-courses to professional training, we are provider-agnostic—if it’s good, we enable it.
   
 - **Equipment**: Breaking down silos around equipment within the network across New Zealand, enabling greater utilisation and faster scientific advancement. This fosters a start-up ecosystem and better solution deployment throughout society.
