@@ -2,10 +2,6 @@
 
 <h1 align="center">Earth Observation Lab Aotearoa 🌏 </h1>
 
-<p align="center">
-  <strong>Aotearoa’s | New Zealand's nexus for collaborative earth observation and data-driven decisions.</strong>
-</p>
-
 ---
 
 ## <p align="center">About Us </p>
