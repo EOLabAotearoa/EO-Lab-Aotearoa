@@ -15,6 +15,12 @@
 We are committed to inclusivity and welcome all who want to join this community—breaking down barriers within and beyond the field.
 
 ---
+## <p align="center">Contents </p>
+- Generate cloud-free composites over New Zealand for Sentinel 2 and Landsat 1 to 9 in Google Earth Engine. [Link][(https://github.com/EOLabAotearoa/EO-Lab-Aotearoa/tree/Home/Tools/GoogleEarthEngine/CloudFreeCompositing)
+
+
+
+---
 
 ## <p align="center"> Core Activities </p>
 
