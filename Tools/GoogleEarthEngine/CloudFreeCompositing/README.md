@@ -1,5 +1,7 @@
 # Google Earth Engine Cloud-Masked Composites
 
+Authors: [Elizabeth Williamns](https://github.com/elizabeth-fw), [Belle Yin](https://github.com/BelleYin), [Ben Anderson](https://github.com/bsanderson410)
+
 ## **Introduction** 
 
 These scripts perform basic cloud and custom cloud/shadow masking for images taken by Landsat and Sentinel-2 satellites. It is usable in the Google Earth Engine Code Editor, using available surface reflectance imagery from the Earth Engine Data Catalog. Each script works with a set AOI to filter imagery collection and generate annual cloud-masked composites based on a selected time range (pre-set to 4-months of the Austral summer). Each final annual cloud-masked image is comprised of multiple mosaicked cloud masked images, in order of mask performance. FInal analysis-ready images are set to be exported to Google Drive.
