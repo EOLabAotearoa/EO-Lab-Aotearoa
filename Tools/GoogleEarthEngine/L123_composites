@@ -1,0 +1,61 @@
+// #################################### AOI ####################################
+
+// Import AOI shapefile from assets
+var AOI = ee.FeatureCollection('projects/your_project_name/assets/your_asset_name'); // THRESHOLD INPUT (specify AOI)
+
+// Visualize AOI centered on the map
+Map.addLayer(AOI, {color: 'red'}, 'AOI');
+Map.centerObject(AOI, 11); //THRESHOLD INPUT (zoom)
+
+
+// #################################### SCALING FACTORS ####################################
+
+// Apply optical scaling factors for Landsat 1, 2, and 3 surface reflectance imagery
+// Imagery scaling factors can be found on the Earth Engine Data Catalog 
+
+function applyL123ScaleFactors(image) {
+  var opticalBands = image.select('B.').multiply(0.0000275).add(-0.2);
+  return image.addBands(opticalBands, null, true);
+}
+
+
+// #################################### MASKING ####################################
+
+// Cloudmask Landsat 1, 2, and 3 imagery using the QA pixel band
+
+function maskL123clouds(image) {
+  var qa = image.select('QA_PIXEL');
+  var mask = qa.eq(1);
+  return image.updateMask(mask);
+}
+
+
+// #################################### VISUALIZATIONS ####################################
+
+var L123_vis = {
+  bands: ['B4', 'B3', 'B2'], 
+  min: 0.0, // THRESHOLD INPUT (min reflectance)
+  max: 0.3, // THRESHOLD INPUT (max reflectance)
+};
+
+
+// #################################### IMAGE COLLECTION & COMPOSING ####################################
+
+for (var year = 1972; year <= 1982; year++) { // THREHOLD INPUT (year loop)
+  var start = year + '-10-01'; // THRESHOLD INPUT (start month of interest)
+  var end = (year + 1) + '-01-31';  // THRESHOLD INPUT (end month of interest)
+
+  var L123 = ee.ImageCollection('LANDSAT/LM01/C02/T1') // Landsat 1 Collection 2 Tier 1 Surface Reflectance
+                .merge(ee.ImageCollection('LANDSAT/LM02/C02/T1')) // Landsat 2 Collection 2 Tier 1 Surface Reflectance
+                .merge(ee.ImageCollection('LANDSAT/LM03/C02/T1')) // Landsat 3 Collection 2 Tier 1 Surface Reflectance
+                .filterDate(start, end)
+                .filterBounds(AOI)
+                .filterMetadata('CLOUD_COVER', 'less_than', 50) //THRESHOLD INPUT
+                .map(applyL123ScaleFactors)
+                .map(maskL123clouds)
+                .median()
+                .clip(AOI);
+
+  // Add the composite to the map
+  Map.addLayer(L123, L123_vis, 'L123_' + year);
+}

@@ -1,0 +1,228 @@
+// #################################### AOI ####################################
+
+// Import AOI shapefile from assets
+var AOI = ee.FeatureCollection('projects/your_project_name/assets/your_asset_name'); // THRESHOLD INPUT (specify AOI)
+
+// Visualize AOI centered on the map
+Map.addLayer(AOI, {color: 'red'}, 'AOI');
+Map.centerObject(AOI, 11); // THRESHOLD INPUT (zoom)
+
+
+// #################################### SCALING FACTORS ####################################
+
+// Apply optical and thermal scaling factors for Landsat 4, 5, and 7 surface reflectance imagery
+// Imagery scaling factors can be found on the Earth Engine Data Catalog
+
+function applyL457ScaleFactors(image) {
+  var opticalBands = image.select('SR_B.').multiply(0.0000275).add(-0.2);
+    var thermalBand = image.select('ST_B6').multiply(0.00341802).add(149.0);
+  return image.addBands(opticalBands, null, true)
+              .addBands(thermalBand, null, true);
+}
+
+// #################################### VISUALIZATIONS ####################################
+
+var L457_vis = {
+  bands: ['SR_B3', 'SR_B2', 'SR_B1'],
+  min: 0.0, // THRESHOLD INPUT (min reflectance)
+  max: 0.25, // THRESHOLD INPUT (max reflectance)
+  gamma: 1.3 // THRESHOLD INPUT (contrast adjustment)
+};
+
+// #################################### MASKING ####################################
+
+// ------------------------- QA_Pixel Mask Landsat 4-7 -------------------------
+
+function QAmask(image) {
+  var cloudShadowBitMask = (1 << 4);
+  var cloudsBitMask = (1 << 3);
+  var dcloudBitMask = (1 << 1);
+  var hcirrusBitMask = (3 << 14);
+  var mcirrusBitMask = (2 << 14);
+  var qa = image.select('QA_PIXEL');
+  var QAmask1 = qa.bitwiseAnd(cloudShadowBitMask).eq(0)
+              .and(qa.bitwiseAnd(cloudsBitMask).eq(0))
+              .and(qa.bitwiseAnd(dcloudBitMask).eq(0))
+              .and(qa.bitwiseAnd(hcirrusBitMask).eq(0))
+              .and(qa.bitwiseAnd(mcirrusBitMask).eq(0));
+
+// Fmask classification values
+  var FMASK_CLEAR_GROUND = 0;
+  var FMASK_WATER = 2;
+  var FMASK_CLOUD_SHADOW = 3;
+  var FMASK_SNOW = 4;
+  var FMASK_CLOUD = 5;
+
+  var QAmask2 = image.select('QA_PIXEL').bitwiseAnd(parseInt('111111',2)).eq(0);
+  var QAmask3 = image.neq(FMASK_CLOUD).and(image.neq(FMASK_CLOUD_SHADOW));
+  var RADSATmask = image.select('QA_RADSAT').eq(0);
+  
+  var combinedQAmask = QAmask1.and(QAmask2).and(QAmask3).and(RADSATmask);
+  
+  return image.updateMask(combinedQAmask);
+}
+
+// ------------------------- Buffer QA_Pixel Mask Landsat 4-7 -------------------------
+
+function bufferQAmask(image) {
+  var QAmaskImg = QAmask(image).mask();
+  var distanceFromClouds = QAmaskImg.not().fastDistanceTransform(30);
+  var bufferDistance = 20;  // THRESHOLD INPUT (Buffer distance - works best at 20 because of streak issue in L7)  
+  var bufferMask = distanceFromClouds.lte(bufferDistance);
+  var combinedMask = QAmaskImg.and(bufferMask.not()); 
+  return image.updateMask(combinedMask);
+}
+
+//----------------------------- Advanced cloud masking using Cloud Score ----------------------
+
+// Function that rescales (between 1 and 0) for cloud score
+function rescale(imag, exp, thresholds) { 
+  return imag.expression(exp, {
+      'blue': imag.select('SR_B1'), // Blue band
+      'green': imag.select('SR_B2'), // Green band
+      'red': imag.select('SR_B3'), // Red band
+      'nir': imag.select('SR_B4'), // Near-IR band
+      'swir1': imag.select('SR_B5'), // SWIR 1 band
+      'swir2': imag.select('SR_B7') // SWIR 2 band
+    })
+    .subtract(thresholds[0]) // Subtract minimum threshold
+    .divide(thresholds[1] - thresholds[0]); // Divide by the range (max - min)
+}
+
+// Function to manually compute cloud score
+function calcCloudScore(img) { 
+  var score = ee.Image(1.0); 
+  score = score.min(rescale(img, 'blue', [0.05, 0.25]));  // THRESHOLD INPUT (Blue)
+  score = score.min(rescale(img, 'red + green + blue', [0.1, 0.8])); // THRESHOLD INPUT (Visible)
+  score = score.min(rescale(img, 'nir + swir1 + swir1', [0.15, 0.8]));  // THRESHOLD INPUT (Infrared)
+  return score;
+}
+
+// CLOUD SCORE
+var maxCloudScore = 0.02; //THRESHOLD INPUT
+
+
+// Apply a strong buffer and shadow mask to the cloud score masking
+function hCSmask(img) {
+  var cloudScore = calcCloudScore(img); // Calculate cloud score 
+  var cloudMask = cloudScore.gt(maxCloudScore); // Create a cloud mask where score is greater than threshold
+  
+  // Set threshold for detecting possible shadow areas
+  var nirDrkThresh = 0.3; // THRESHOLD INPUT
+  var darkPixels = img.select('SR_B4').lt(nirDrkThresh).rename('dark_pixels');  // Detect dark pixels
+  
+  // Calculate shadow azimuth based on solar azimuth angle
+  var solarAzimuth = ee.Number(img.get('SUN_AZIMUTH'));
+  var shadowAzimuth = ee.Number(90).subtract(solarAzimuth);
+  
+  var shadProj = cloudMask
+    .directionalDistanceTransform(shadowAzimuth, 10)  // Project shadows
+    .reproject({crs: img.select(0).projection(), scale: 30})  // Scale is set to Landsat spatial resolution
+    .select('distance')
+    .mask()
+    .rename('cloud_transform');
+    
+    // Map cloud shadow projection onto dark pixel areas
+  var shadows = shadProj.multiply(darkPixels).rename('shadows');
+  
+  var cloudshadMask = cloudMask.or(shadows);
+  
+  // Buffer Cloud and Shadow Mask
+  var distanceFromClouds = cloudMask.fastDistanceTransform(30); // Get distance from clouds
+  var bufferMask = distanceFromClouds.lte(90); // THRESHOLD INPUT (high buffer)
+  
+  //var shadowMask = img.normalizedDifference(['SR_B4', 'SR_B5']).rename('shadowScore').lt(0.5);
+  return img.updateMask(bufferMask.not()) //.updateMask(shadowMask);
+}
+
+// Apply a low buffer and shadow mask to the cloud score masking
+function lCSmask(img) {
+  var cloudScore = calcCloudScore(img); // Calculate cloud score 
+  var cloudMask = cloudScore.gt(maxCloudScore); // Create a cloud mask where score is greater than threshold
+  
+  // Set threshold for detecting possible shadow areas
+  var nirDrkThresh = 0.3; // THRESHOLD INPUT
+  var darkPixels = img.select('SR_B4').lt(nirDrkThresh).rename('dark_pixels');  // Detect dark pixels
+  
+  // Calculate shadow azimuth based on solar azimuth angle
+  var solarAzimuth = ee.Number(img.get('SUN_AZIMUTH'));
+  var shadowAzimuth = ee.Number(90).subtract(solarAzimuth);
+  
+  var shadProj = cloudMask
+    .directionalDistanceTransform(shadowAzimuth, 10)  // Project shadows
+    .reproject({crs: img.select(0).projection(), scale: 30})  // Set Landsat spatial resolution
+    .select('distance')
+    .mask()
+    .rename('cloud_transform');
+    
+    // Map cloud shadow projection onto dark pixel areas
+  var shadows = shadProj.multiply(darkPixels).rename('shadows');
+  
+  var cloudshadMask = cloudMask.or(shadows);
+  
+  // Buffer Cloud and Shadow Mask
+  var distanceFromClouds = cloudMask.fastDistanceTransform(30); // Get distance from clouds
+  var bufferMask = distanceFromClouds.lte(20); // THRESHOLD INPUT (low buffer)
+  
+  //var shadowMask = img.normalizedDifference(['SR_B4', 'SR_B5']).rename('shadowScore').lt(0.5);
+  return img.updateMask(bufferMask.not()); //.updateMask(shadowMask);
+}
+
+// #################################### IMAGE COLLECTION & COMPOSITING ####################################
+
+for (var year = 1982; year <= 2023; year++) { // THRESHOLD INPUT (year loop)
+  var start = year + '-10-01'; // THRESHOLD INPUT (start month of interest)
+  var end = (year + 1) + '-01-31';  // THRESHOLD INPUT (end month of interest)
+
+  var L457 = ee.ImageCollection('LANDSAT/LT04/C02/T1_L2') // Landsat 4 Tier 1 Level 2 Surface Reflectance
+                .merge(ee.ImageCollection('LANDSAT/LT05/C02/T1_L2')) // Landsat 5 Tier 1 Level 2 Surface Reflectance
+                .merge(ee.ImageCollection('LANDSAT/LE07/C02/T1_L2')) // Landsat 7 Tier 1 Level 2 Surface Reflectance
+                .filterDate(start, end)
+                .filterBounds(AOI)
+                .filterMetadata('CLOUD_COVER', 'less_than', 80) // THRESHOLD INPUT
+                .map(applyL457ScaleFactors);
+
+// Compute composites for each year with various levels of masking
+  var bufferQACScomp = L457.map(bufferQAmask).map(hCSmask).median().clip(AOI);
+  var QACScomp = L457.map(QAmask).map(lCSmask).median().clip(AOI);
+  var bufferQAcomp = L457.map(bufferQAmask).median().clip(AOI);
+  var QAcomp = L457.map(QAmask).median().clip(AOI);
+  var hCScomp = L457.map(hCSmask).median().clip(AOI);
+  var lCScomp = L457.map(lCSmask).median().clip(AOI);
+  var OGcomp = L457.median().clip(AOI);
+
+ 
+// Add layers to the map for each year for visualization (optional - used to check cloud masking performance)
+  //  Map.addLayer(OGcomp, L457_vis, 'L457_OG_' + year);
+  // Map.addLayer(hCScomp, L457_vis, 'L457_hCS_' + year);
+  // Map.addLayer(lCScomp, L457_vis, 'L457_lCS_' + year);
+  // Map.addLayer(QAcomp, L457_vis, 'L457_QA_' + year);
+  // Map.addLayer(QACScomp, L457_vis, 'L457_QACS_' + year);
+  // Map.addLayer(bufferQACScomp, L457_vis, 'L457_bufferQACS_' + year);
+
+
+// #################################### IMAGE MOSAICING ####################################
+
+// Create a mosaic by stacking the composites in an ImageCollection and applying the mosaic operation
+  var mosaic = ee.ImageCollection([
+    lCScomp,
+    QAcomp,
+    QACScomp,
+    bufferQACScomp
+  ]).mosaic();
+
+  // Add the mosaic for the current year to the map
+  Map.addLayer(mosaic, L457_vis, 'L457_mosaic_' + year);
+
+// // #################################### IMAGE EXPORT ####################################
+
+Export.image.toDrive({
+  image: mosaic,
+  description: 'L457_mosaic_' + year,  // Name of the file
+  scale: 30,  // Set the scale (resolution) in meters (30m for Landsat)
+  region: AOI,  // Specify the region to export
+  maxPixels: 1e13,  // Increase max pixel count if needed THRESHOLD INPUT
+  fileFormat: 'GeoTIFF'
+});
+  
+} // END OF ANNUAL 'FOR' LOOP

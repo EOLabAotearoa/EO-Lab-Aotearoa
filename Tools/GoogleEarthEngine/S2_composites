@@ -1,0 +1,342 @@
+// ###################################################### Area of Interest (AOI) #####################################################
+
+// AOI Shapefile loaded into Google Earth Engine Project Assets
+var AOI = ee.FeatureCollection('projects/your_project_name/assets/your_asset_name'); // THRESHOLD INPUT (specify AOI)
+
+// Visualize AOI centered on the map 
+Map.addLayer (AOI, {color: 'red'}, 'AOI');
+Map.centerObject(AOI, 11); // THRESHOLD INPUT (zoom)
+
+
+// ###################################################### SCALING FACTORS #####################################################
+
+// Apply scaling factors for Sentinel 2 surface reflectance imagery
+// Imagery scaling factors can be found on the Earth Engine Data Catalog
+
+function S2ScaleFactors(image) {
+  var Bands = image.select('B.').divide(10000);
+  return image.addBands(Bands, null, true);
+}
+
+
+// ###################################################### VISUALIZATION #####################################################
+
+//---------------------------------------------  Visible RGB  -------------------------------------------------------------
+var S2_vis = {
+  min: 0.0, // THRESHOLD INPUT (min reflectance)
+  max: 0.15, // THRESHOLD INPUT (max reflectance)
+  bands: ['B4', 'B3', 'B2']
+};
+
+//--------------------------------------------- Cloud Probability Visualization -------------------------------------------------------------
+// Visualizes the S2_CLOUD_PROBABILITY band (useful for mask quality assesment and debugging)
+// Clouds appear as white with a gradient to blue non-cloudy areas
+var S2_cloud = {
+  min: 0.0, // THRESHOLD INPUT
+  max: 100, // THRESHOLD INPUT
+  palette: ['blue', 'white']
+};
+
+// ###################################################### CLOUD MASKING #####################################################
+
+// ------------------------------------------------ QA60 Mask ---------------------------------------------
+
+function QAmask(image) {
+  var qa = image.select('QA60');
+  var cloudBitMask = 1 << 10;
+  var cirrusBitMask = 1 << 11;
+// Both flags should be set to zero, indicating clear conditions
+  var mask1 = qa.bitwiseAnd(cloudBitMask).eq(0)
+              .and(qa.bitwiseAnd(cirrusBitMask).eq(0));
+  return image.updateMask(mask1);
+}
+
+// --------------------------------------------- Buffer QA60 Mask ---------------------------------------------
+
+function bufferQAmask(image) {
+  var QAmaskImg = QAmask(image).mask();
+  var distanceFromClouds = QAmaskImg.not().fastDistanceTransform(10); //S2 spatial resolution
+  var bufferDistance = 20;  // THRESHOLD INPUT (buffer distance)
+  var bufferMask = distanceFromClouds.lte(bufferDistance);
+  var combinedMask = QAmaskImg.and(bufferMask.not()); 
+  return image.updateMask(combinedMask);
+}
+
+//--------------------------------------------- Custom Cloud Score Mask ---------------------------------------------
+
+//Function that rescales (between 1 and 0) for cloud score (A helper to apply an expression and linearly rescale the output)) and renames bands
+function rescale(img, exp, thresholds) { 
+  return img.expression(exp, {
+      'blue': img.select('B2'), // Remnaming the bands to be called in 'calcCloudScore' function
+      'green': img.select('B3'),
+      'red': img.select('B4'),
+      'nir': img.select('B8'),
+      'swir1': img.select('B11'),
+      'swir2': img.select('B12')
+    })
+    .subtract(thresholds[0])
+    .divide(thresholds[1] - thresholds[0]);
+}
+
+// Function to manually compute a cloud score (Does not rely on S2 Cloud Probabilty Band)
+function calcCloudScore(img) { 
+  var score = ee.Image(1.0); 
+  // Clouds are reasonably bright in the blue band. 
+  score = score.min(rescale(img, 'blue', [0.05, 0.3]));  // THRESHOLD INPUT (blue)
+  // Clouds are reasonably bright in all visible bands. 
+  score = score.min(rescale(img, 'red + green + blue', [0.1, 0.8])); // THRESHOLD INPUT (visible)
+  // Clouds are reasonably bright in all infrared bands. 
+  score = score.min(rescale(img, 'nir + swir1 + swir1', [0.15, 0.8]));  // THRESHOLD INPUT (infrared)
+  return score;
+}
+
+// CLOUD SCORE 
+var maxCloudScore = 0.05; // THRESHOLD INPUT
+
+// Define the cloud score masking function NO Buffer
+function CSmask(img) {
+  // Create a cloud mask where cloud score is greater than...
+  var cloudScore = calcCloudScore(img);
+  var cloudMask = cloudScore.gt(maxCloudScore);
+  
+  var nirDrkThresh = 0.05; // THRESHOLD INPUT
+  var darkPixels = img.select('B5').lt(nirDrkThresh).rename('dark_pixels');  // Detect dark pixels
+  
+  // Calculate shadow azimuth based on solar azimuth angle
+  var solarAzimuth = ee.Number(img.get('MEAN_SOLAR_AZIMUTH_ANGLE'));
+  var shadowAzimuth = ee.Number(90).subtract(solarAzimuth);
+  
+var shadProj = cloudMask
+    .directionalDistanceTransform(shadowAzimuth, 60)  // Project shadows
+    .reproject({crs: img.select(0).projection(), scale: 10})  // S2 spatial resolution
+    .select('distance')
+    .mask()
+    .rename('cloud_transform');
+    
+    // Map cloud shadow projection onto dark pixel areas
+  var shadows = shadProj.multiply(darkPixels).rename('shadows');
+  
+  var cloudshadMask = cloudMask.or(shadows);
+  
+  return img.updateMask(cloudshadMask.not()); // Apply the combined mask to the image
+}
+
+
+//--------------------------------------------- Buffered Manually Calculated Cloud Score Mask  ---------------------------------------------
+
+// Apply a strong buffer and shadow mask to the cloud score masking
+function bufferCSmask(img) {
+  var cloudScore = calcCloudScore(img); // Calculate cloud score 
+  var cloudMask = cloudScore.gt(maxCloudScore); // Create a cloud mask where score is greater than threshold
+  
+  var nirDrkThresh = 0.05;
+  var darkPixels = img.select('B5').lt(nirDrkThresh).rename('dark_pixels');  // Detect dark pixels
+  
+  // Calculate shadow azimuth based on solar azimuth angle
+  var solarAzimuth = ee.Number(img.get('MEAN_SOLAR_AZIMUTH_ANGLE'));
+  var shadowAzimuth = ee.Number(90).subtract(solarAzimuth);
+  
+  var shadProj = cloudMask
+    .directionalDistanceTransform(shadowAzimuth, 30)  // Project shadows
+    .reproject({crs: img.select(0).projection(), scale: 10})  // S2 spatial resolution
+    .select('distance')
+    .mask()
+    .rename('cloud_transform');
+    
+    // Map cloud shadow projection onto dark pixel areas
+  var shadows = shadProj.multiply(darkPixels).rename('shadows');
+  
+  var cloudshadMask = cloudMask.or(shadows);
+  
+  // Buffer Cloud and shadow Mask
+  var distanceFromMask = cloudshadMask.fastDistanceTransform(10); // Get distance from clouds
+  var bufferMask = distanceFromMask.lte(20); // Create a buffer around clouds
+  
+  //var shadowMask = img.normalizedDifference(['SR_B5', 'SR_B6']).rename('shadowScore').lt(0.5);
+  return img.updateMask(bufferMask.not());
+}
+
+
+// //--------------------------------------------- Buffer Cloud Probability Mask ---------------------------------------------
+
+// function bufferCPmask(image) {
+//   var masks = getCloudAndShadowMasks(image);
+//   var bufferedMask = masks.combinedMask.focalMax(50 / 10).not(); // Buffer and invert for valid pixels
+//   return image.updateMask(bufferedMask);
+// }
+
+// Function to match S2 Imagery and Cloud Probability (see README for additional context)
+function getCloudProbImage(image) {
+  var imageTime = ee.Date(image.get('system:time_start'));
+  // Hour buffer to find close match for 'time_start' of S2_Harmonized and S2_CloudProb
+  var startTime = imageTime.advance(-1, 'hour');
+  var endTime = imageTime.advance(1, 'hour');
+  var cloudProbImage = S2cloudProbFullCollection
+                        .filterDate(startTime, endTime)
+                        .first(); 
+  return cloudProbImage; 
+}
+
+// CLOUD PROBABILITY MASK THRESHOLD INPUT
+var maxCloudProbability = 15; // THRESHOLD INPUT (limit for % probability that pixel is a cloud)
+// Function to apply the cloud probability mask to each S2 image (no shadow masking)
+function applyCloudProbMask(image) {
+  var cloudProbImage = getCloudProbImage(image);  // Get corresponding cloud probability image
+  // Create a cloud probability mask from the specified max cloud probability
+  var probMask = ee.Image(cloudProbImage).lt(maxCloudProbability);
+  // Apply the cloud probability mask to the Sentinel-2 image
+  var maskedImage = image.updateMask(probMask);  
+  return maskedImage;
+}
+
+// Function to match and add cloud probability band to S2_Harmonized collection to mask in the future
+function addCloudBandsToImgCollection(image) {
+    var cloudProbThreshold = maxCloudProbability;
+    var cloudProbImage = getCloudProbImage(image);  // Get corresponding cloud probability image
+    var isCloud = ee.Image(cloudProbImage).gt(cloudProbThreshold).rename('clouds'); 
+    return image.addBands(ee.Image([isCloud]));
+}
+
+// Defining threshold for considering a pixel 'dark' using Near Infrared Band (NIR - Band 8)
+var nirDrkThresh = 0.15 // THRESHOLD INPUT
+// Function to identify cloud shadows (and add to the collection as a band) by creating cloud shadow projections 
+function addShadowBandsToImgCollection(image) {
+  var darkPixels = ee.Image(image).select('B8').lt(nirDrkThresh).rename('dark_pixels');
+        
+  var shadowAzimuth = ee.Number(90).subtract(ee.Number(ee.Image(image).get('MEAN_SOLAR_AZIMUTH_ANGLE'))); 
+  var cldProj = ee.Image(image).select('clouds')   // projetion using MEAN_SOLAR_AZIMUTH_ANGLE off of identified clouds (high cloud probability)
+            .directionalDistanceTransform(shadowAzimuth, 10)
+            .reproject({crs: ee.Image(image).select(0).projection(), scale: 100})
+            .select('distance')
+            .mask()
+            .rename('cloud_transform');
+        
+  var shadows = cldProj.multiply(darkPixels).rename('shadows');  //Mapping the cloud projection overlap with dark pixel location to identify cloud shadow pixels and add band: 'shadows'
+        
+  return ee.Image(image).addBands(ee.Image([darkPixels, cldProj, shadows]));
+}
+
+// CLOUD PROBABILITY BUFFER MASK DISTANCE 
+  var bufferProbDistance = 100; // THRESHOLD INPUT
+// Function to add both cloud AND cloud shadow masks into a single band: 'cloudmask'
+function addCldShdwMaskToImgCollection(img) {
+  var imgCloud = addCloudBandsToImgCollection(img);
+  var imgCloudShadow = addShadowBandsToImgCollection(imgCloud);
+
+  var isCldShdw = imgCloudShadow.select('clouds').add(imgCloudShadow.select('shadows')).gt(0);
+  isCldShdw = isCldShdw.focalMin(2).focalMax(bufferProbDistance * 2 / 20)
+    .reproject({crs: img.select(0).projection(), scale: 20})
+    .rename('cloudmask');
+
+  return imgCloudShadow.addBands(isCldShdw);
+}
+
+// Function to mask clouds AND cloud shadow using 'cloudmask' band added from 'addCldShdwMaskToImgCollection' function
+function maskCloudShdw (image) {
+    var notCldShdw = image.select('cloudmask').not();
+    return image.updateMask(notCldShdw);
+}
+
+// Function to remove the last 5 bands from an image (can be mapped to image collection)
+// After adding and utilizing 5 calculated bands [isCloud, darkPixels, cldProj, shadows, cloudmask] in the functions shown above, remove them to avoid output/mapping errors
+function removeLast5Bands(image) {
+  // Get the list of all band names in the image
+  var bandNames = image.bandNames();
+  // Select all bands except the last 5
+  var selectedBands = bandNames.slice(0, bandNames.length().subtract(5));
+  return image.select(selectedBands);
+}
+
+function processCloudProbWithBufferNoShadow(S2Image) {
+  var S2ImageNoCloud = addCldShdwMaskToImgCollection(S2Image)
+  var S2ImageNoCloudNoShadow = maskCloudShdw (S2ImageNoCloud)
+  var S2ImageNoCloudNoShadowNoExtraBands = removeLast5Bands(S2ImageNoCloudNoShadow)
+  return S2ImageNoCloudNoShadowNoExtraBands
+}
+
+// ###################################################### IMAGE COLLECTION & COMPOSITING #####################################################
+
+// ------------------------------------------------------  START OF ANNUAL 'FOR LOOP'  -------------------------------------------------------
+for (var year = 2018; year <= 2024; year++) {  // THRESHOLD INPUT (year loop)
+  var start = year + '-10-01';  // THRESHOLD INPUT (start month of interest)
+  var end = (year + 1) + '-01-31';  // THRESHOLD INPUT (end month of interest)
+
+  var S2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+                .filterDate(start, end)
+                .filterBounds(AOI)
+                .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 50) // THRESHOLD INPUT
+                .map(S2ScaleFactors);
+                
+var S2_times = S2.aggregate_array('system:time_start');
+
+
+// Over selecting cloud probability images initially (no % filter)
+var S2cloudProbFullCollection = ee.ImageCollection('COPERNICUS/S2_CLOUD_PROBABILITY')
+                .filterDate(start, end)
+                .filterBounds(AOI);
+              
+var cloudProb_times = S2cloudProbFullCollection.aggregate_array('system:time_start');  
+
+// -------------------------------------------------------- Collection Size Checks --------------------------------------------------------
+
+// Print the number of clearish images from end of each year taken
+var count1 = S2.size();
+print('# of images in AOI w/ less than ' + 50 + '% cloud from end of ' + year + ':', count1); //THRESHOLD INPUT (match cloudy pixel percentage threshold)
+
+// Optional - Checking when Images were taken and Ensuring Correction Matching between S2_Harmonized and S2_cloudProb 
+  // print(S2_times)
+  // print(cloudProb_times)
+  // var count2 = S2cloudProbFullCollection.size();
+  // print('Total cloud prob images from end of ' + year + ':', count2);
+  // var count3  = S2.map(processCloudProbWithBufferNoShadow).size();
+  // print('# of cloud prob masked images from end of ' + year + ' (Should match):', count3);
+
+// ------------------------------------------------------------- Map Layers ------------------------------------------------------------------
+
+// Compute composites for each year with various levels of masking
+var OGcomp = S2.median().clip(AOI);
+var QAcomp = S2.map(QAmask).median().clip(AOI);
+var bufferQAcomp = S2.map(bufferQAmask).median().clip(AOI);
+var CScomp = S2.map(CSmask).median().clip(AOI);
+var bufferCScomp = S2.map(bufferCSmask).median().clip(AOI);
+var QACScomp = S2.map(QAmask).map(CSmask).median().clip(AOI);
+var bufferQACScomp = S2.map(bufferQAmask).map(bufferCSmask).median().clip(AOI);
+var QAbufferCScomp = S2.map(QAmask).map(bufferCSmask).median().clip(AOI);
+var CPcomp = S2.map(processCloudProbWithBufferNoShadow).median().clip(AOI);
+var bufferQACPCScomp = S2.map(bufferQAmask).map(processCloudProbWithBufferNoShadow).map(bufferCSmask).median().clip(AOI);
+var QACPCScomp = S2.map(QAmask).map(processCloudProbWithBufferNoShadow).map(CSmask).median().clip(AOI);
+
+// Add layers to the map for each year (optional - used to check cloud masking performance)
+  //Map.addLayer(QAcomp, S2_vis, 'S2_QA_' + year);
+  //Map.addLayer(bufferQAcomp, S2_vis, 'S2_bufferQA_' + year);
+  //Map.addLayer(CScomp, S2_vis, 'S2_CS_' + year);
+  //Map.addLayer(bufferCScomp, S2_vis, 'S2_bufferCS_' + year);
+  //Map.addLayer(QACScomp, S2_vis, 'S2_QACS_' + year);
+  //Map.addLayer(bufferQACScomp, S2_vis, 'S2_bufferQSCS_' + year);
+  //Map.addLayer(QAbufferCScomp, S2_vis, 'S2_QAbufferCS_' + year);
+  //Map.addLayer(CPcomp, S2_vis, 'S2_CP_' + year);
+  //Map.addLayer(bufferQACPCScomp, S2_vis, 'S2_bufferQACPCS_' + year);
+  //Map.addLayer(QACPCScomp, S2_vis, 'S2_QACPCS_' + year);
+  //Map.addLayer(bufferCPCScomp, S2_vis, 'S2_bufferCPCS_' + year);
+  
+
+// ###################################################### IMAGE MOSAICING #####################################################
+
+ var mosaic = ee.ImageCollection([
+   CScomp,
+   QACScomp,
+   CPcomp]).mosaic().toFloat();
+
+ Map.addLayer(mosaic, S2_vis, 'S2_mosaic_' + year);
+
+// ###################################################### IMAGE EXPORT #####################################################
+Export.image.toDrive({
+  image: mosaic,
+  description: 'S2_mosaic_' + year,  // Name of the file
+  scale: 10,  // Set the scale (resolution) in meters (10m for Sentinel-2)
+  region: AOI,  // Specify the region to export
+  maxPixels: 1e13,  // Increase max pixel count if needed THRESHOLD INPUT
+  fileFormat: 'GeoTIFF'
+});
+
+ } // END OF ANNUAL 'FOR LOOP' 
