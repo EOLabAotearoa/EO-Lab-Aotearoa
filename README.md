@@ -13,6 +13,8 @@ We are committed to inclusivity and welcome all who want to join this communityâ
 
 ## <p align="center">Contents </p>
 - Generate cloud-free composites over New Zealand for Sentinel 2 and Landsat 1 to 9 in Google Earth Engine. [Link](https://github.com/EOLabAotearoa/EO-Lab-Aotearoa/tree/Home/Tools/GoogleEarthEngine/CloudFreeCompositing)
+- Useful New Zealand EO / Geospatial GitHub Repositories: This is a curated list of links to external repositories from government agencies, research institutes, and other groups in Aotearoa.  ADD LINK TO REPO
+
 
 ---
 
