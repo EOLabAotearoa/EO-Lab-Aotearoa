@@ -6,7 +6,7 @@ We link directly to their official repos so users always get the most up-to-date
 
 ---
 
-## Government Agencies
+## <p align="center">Government Agencies </p>
 
 - **Department of Conservation (DOC)** – [GitHub Pages](https://docgovtnz.github.io/)  
   Tools and resources supporting conservation projects across Aotearoa.  
@@ -28,7 +28,7 @@ We link directly to their official repos so users always get the most up-to-date
 
 ---
 
-## Crown Research Institutes
+## <p align="center">Crown Research Institutes </p>
 
 - **AgResearch** – [GitHub](https://github.com/AgResearch)  
   Agricultural science and land-use research tools.  
@@ -53,6 +53,6 @@ We link directly to their official repos so users always get the most up-to-date
 
 ---
 
-## Other Resources
+## <p align="center">Other Resources </p>
 
 - **New Zealand Data and APIs** – [Wiki New Zealand list](https://github.com/WikiNewZealand/new-zealand-data)  
