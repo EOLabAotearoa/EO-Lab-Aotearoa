@@ -6,7 +6,7 @@ We link directly to their official repos so users always get the most up-to-date
 
 ---
 
-## Government Agencies
+## <p align="center">Government Agencies </p>
 - **Department of Conservation (DOC)** – [GitHub Pages](https://docgovtnz.github.io/)  
 - **Land Information New Zealand (LINZ)** – [GitHub](https://github.com/linz)  
 - **Ministry for Primary Industries (MPI)** – [GitHub](https://github.com/Ministry-for-Primary-Industries)  
@@ -14,7 +14,7 @@ We link directly to their official repos so users always get the most up-to-date
 - **Stats NZ** – [GitHub](https://github.com/statisticsnz)  
 - **NZ Transport Agency (NZTA)** – [GitHub](https://github.com/NZTA)  
 
-## Crown Research Institutes
+## <p align="center">Crown Research Institutes </p>
 - **AgResearch** – [GitHub](https://github.com/AgResearch)  
 - **ESR (Environmental Science and Research)** – [GitHub](https://github.com/ESR-NZ)  
 - **GNS Science** – [GitHub](https://github.com/GNS-Science)  
@@ -23,5 +23,5 @@ We link directly to their official repos so users always get the most up-to-date
 - **Scion (Forest Research)** – [GitHub](https://github.com/ScionResearch)  
 - **Plant & Food Research** – [GitHub](https://github.com/PlantandFoodResearch)  
 
-## Other Resources
+## <p align="center">Other Resources </p>
 - **New Zealand Data and APIs** – [Wiki New Zealand list](https://github.com/WikiNewZealand/new-zealand-data)
